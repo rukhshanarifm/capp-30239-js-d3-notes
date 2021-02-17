@@ -38,8 +38,11 @@ console.log(+sum(1)(2)(3)(4)); //10
 
 // important built ins
 
-// console.log
 // math ops
+console.log(Math.random());
+const exampleArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const pick = () => exampleArray[Math.floor((exampleArray.length - 1) * Math.random())];
+
 // type of
 
 console.log(typeof 2); // "number"

@@ -50,23 +50,20 @@ for / while / forEach / map / reduce
 
 ### 3. Selection
 Lecture Enter update cycle 
-Demo: modify the dom
-
-### 4. Axes and other library functions
 Demo: making a bar chart
 
-### 5. Line charts
+### 4. Line charts
 Demo: making the gun deaths in florida chart
 
-### 6. Nested selections
+### 5. Nested selections
 Demo: anscomb’s quartet
 
-### 7. Interaction
+### 6. Interaction
 Demo: Tooltipped scatterplot
+
+### 7. Animation 
+Demo: Circular bar clock
+Demo: Tooltip dropdown 
 
 ### 8. Putting it all together 
 Demo: constructing a stupid slide show app
-
-### 9. Animation 
-Demo: Circular bar clock
-Demo: Tooltip dropdown 
