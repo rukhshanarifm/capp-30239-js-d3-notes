@@ -1,4 +1,4 @@
-// 8. promises
+// 7. promises
 
 new Promise((resolve, reject) => {
   // do some asnyc or risky action

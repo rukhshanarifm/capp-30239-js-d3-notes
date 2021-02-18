@@ -118,3 +118,5 @@ console.log(newArray.length); // 2
 // assets/equality-1.png assets/equality-2.png
 
 // dates
+const myDate = new Date('September 4th, 1982');
+const rightNow = new Date().getTime();

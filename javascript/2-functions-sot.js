@@ -36,6 +36,22 @@ function sum(n) {
 console.log(v); // Error: v is not defined
 console.log(+sum(1)(2)(3)(4)); //10
 
+// currying
+
+function curry() {
+  let sum = 0;
+  const currier = (val) => {
+    if (!Number.isFinite(val)) {
+      return sum;
+    }
+    sum = sum + val;
+    return currier;
+  };
+  return currier;
+}
+
+console.log(curry()(1)(2)(3)());
+
 // important built ins
 
 // math ops

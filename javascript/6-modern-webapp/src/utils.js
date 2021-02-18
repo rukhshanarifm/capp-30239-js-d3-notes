@@ -3,3 +3,7 @@
 export function myExampleUtil(x) {
   return x * 2;
 }
+
+export default function other() {
+  return 'other???';
+}

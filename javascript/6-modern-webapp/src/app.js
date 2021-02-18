@@ -1,27 +1,22 @@
-// if the data you are going to import is small, then you can import it using es6 import
-// (I like to use use screaming snake case for imported json)
-// import MY_DATA from './app/data/example.json'
-
+import './main.css';
 import {myExampleUtil} from './utils';
 import {select} from 'd3-selection';
-// this command imports the css file, if you remove it your css wont be applied!
-import './main.css';
 
-// this is just one example of how to import data. there are lots of ways to do it!
-fetch('./data/example.json')
-  .then(response => response.json())
-  .then(data => myVis(data))
-  .catch(e => {
-    console.log(e);
-  });
-
-function myVis(data) {
+function myVis(data, data2) {
   const width = 5000;
   const height = (36 / 24) * width;
-  console.log(data, height);
+  console.log(data, data2, height);
   console.log('Hi!');
-  // EXAMPLE FIRST FUNCTION
+  console.log(myExampleUtil(2));
   select('#app')
     .append('h1')
-    .text('hi!');
+    .text('hi HI hi');
 }
+
+Promise.all([
+  fetch('./data/another-data.json').then(x => x.json()),
+  fetch('./data/example.json').then(x => x.json()),
+]).then(results => {
+  const [anotherData, example] = results;
+  myVis(anotherData, example);
+});
