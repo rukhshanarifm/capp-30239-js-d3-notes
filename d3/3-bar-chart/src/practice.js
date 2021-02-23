@@ -1,60 +1,61 @@
 import './main.css';
 import {scaleLinear, scaleBand} from 'd3-scale';
 import {extent} from 'd3-array';
+import {axisBottom, axisTop, axisLeft, axisRight} from 'd3-axis';
 import {select} from 'd3-selection';
-import {axisBottom, axisLeft} from 'd3-axis';
 
 fetch('./data/cars.json')
-  .then(d => d.json())
-  .then(d => myVis(d));
+  .then(x => x.json())
+  .then(data => {
+    myVis(data);
+  });
 
-// constants
-const height = 500;
-const width = 500;
-const margin = {left: 100, top: 10, bottom: 50, right: 10};
-const plotWidth = width - margin.left - margin.right;
-const plotHeight = height - margin.top - margin.bottom;
-
-function uniques(data, key) {
+function getUniques(data, key) {
   return Array.from(data.reduce((acc, row) => acc.add(row[key]), new Set()));
 }
 
-function prepareData(data) {
-  const aggregatedData = data.reduce((acc, row) => {
-    acc[row.Origin] = (acc[row.Origin] || 0) + Number(row.Weight_in_lbs);
+const HEIGHT = 400;
+const WIDTH = 400;
+const margin = {left: 50, right: 50, top: 50, bottom: 50};
+const plotWidth = WIDTH - margin.left - margin.right;
+const plotHeight = HEIGHT - margin.top - margin.bottom;
 
+function prepData(data, xKey, yKey) {
+  const groups = data.reduce((acc, row) => {
+    acc[row[xKey]] = (acc[row[xKey]] || 0) + row[yKey];
     return acc;
   }, {});
-  return Object.entries(aggregatedData).map(([country, sum]) => {
-    return {country, sum};
-  });
+  return Object.entries(groups).map(([x, y]) => ({x, y}));
 }
-
-function myVis(data) {
-  const preppedData = prepareData(data);
+function myVis(preData) {
+  const data = prepData(preData, 'Origin', 'Weight_in_lbs');
+  console.log(data);
+  const xDomain = getUniques(data, 'x');
+  const [yDomainMin, yDomainMax] = extent(data, x => Number(x.y));
   const xScale = scaleBand()
-    .domain(uniques(data, 'Origin'))
+    .domain(xDomain)
     .range([0, plotWidth]);
   const yScale = scaleLinear()
-    .domain([extent(preppedData, d => d.sum)[1], 0])
+    .domain([yDomainMax, 0])
     .range([plotHeight, 0]);
 
   const svg = select('#app')
     .append('svg')
-    .attr('height', height)
-    .attr('width', width)
+    .attr('height', HEIGHT)
+    .attr('width', WIDTH)
     .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
+    .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
   svg
     // data bind
     .selectAll('rect')
-    .data(preppedData)
+    .data(data)
     // join
     .join('rect')
     // specify properties
-    .attr('x', d => xScale(d.country))
-    .attr('y', d => plotHeight - yScale(d.sum))
-    .attr('height', d => yScale(d.sum))
+    .attr('x', d => xScale(d.x) + xScale.bandwidth() / 2)
+    .attr('y', d => plotHeight - yScale(d.y))
+    .attr('height', d => yScale(d.y))
     .attr('width', xScale.bandwidth())
     .attr('fill', 'steelblue')
     .attr('stroke', 'white');
@@ -62,7 +63,9 @@ function myVis(data) {
   svg
     .append('g')
     .call(axisBottom(xScale))
-    .attr('transform', `translate(${0},${plotHeight})`);
-  svg.append('g').call(axisLeft(yScale.range([0, plotHeight])));
-  // .attr('transform', `translate(${plotWidth})`);
+    .attr('transform', `translate(${margin.left}, ${plotHeight})`);
+  svg
+    .append('g')
+    .call(axisLeft(yScale.range([0, plotHeight])))
+    .attr('transform', `translate(${margin.left})`);
 }

@@ -1,84 +1,73 @@
 import './main.css';
+import {json} from 'd3-fetch';
 import {scaleLinear, scaleBand} from 'd3-scale';
 import {extent} from 'd3-array';
-import {axisBottom, axisTop, axisLeft, axisRight} from 'd3-axis';
 import {select} from 'd3-selection';
+import {axisBottom, axisLeft} from 'd3-axis';
 
-const yVal = 'Displacement';
-const xVal = 'Origin';
+json('./data/cars.json').then(myVis);
 
-fetch('./data/cars.json')
-  .then(d => d.json())
-  .then(data => myBars(data));
+function unique(data, key) {
+  return Array.from(data.reduce((acc, row) => acc.add(row[key]), new Set()));
+}
 
-//   constants
+const xDim = 'Origin';
+const yDim = 'Weight_in_lbs';
 const height = 500;
 const width = 500;
-const margin = {top: 10, bottom: 50, right: 10, left: 50};
-const plotHeight = height - margin.top - margin.bottom;
+const margin = {top: 50, bottom: 50, right: 50, left: 50};
 const plotWidth = width - margin.left - margin.right;
+const plotHeight = height - margin.top - margin.bottom;
 
-function uniques(data) {
-  return Array.from(
-    data.reduce((acc, row) => {
-      return acc.add(row[xVal]);
-    }, new Set()),
-  );
-}
-
-function aggregateData(data) {
-  const aggregatedData = data.reduce((acc, row) => {
-    acc[row[xVal]] = (acc[row[xVal]] || 0) + Number(row[yVal]);
+function prepData(data, xKey, yKey) {
+  const summedData = data.reduce((acc, row) => {
+    const xVal = row[xKey];
+    acc[xVal] = (acc[xVal] || 0) + row[yKey];
     return acc;
   }, {});
-  return Object.entries(aggregatedData).map(row => {
-    return {country: row[0], sum: row[1]};
-  });
+  return Object.entries(summedData).map(([x, y]) => ({x, y}));
 }
 
-function myBars(data) {
-  const aggData = aggregateData(data);
-  // scales
-  const origins = uniques(data);
+function myVis(preData) {
+  const data = prepData(preData, xDim, yDim);
+  const xDomain = unique(data, 'x');
+  const yDomain = extent(data, d => d.y);
+  console.log(yDomain);
   const xScale = scaleBand()
-    .domain(origins)
+    .domain(xDomain)
     .range([0, plotWidth]);
-  const naiveDomain = extent(aggData, d => d.sum);
-  console.log(naiveDomain);
   const yScale = scaleLinear()
-    .domain([0, naiveDomain[1]])
-    .range([plotHeight, 0]);
+    .domain([0, yDomain[1]])
+    .range([0, plotHeight]);
 
-  // selection
   const svg = select('#app')
     .append('svg')
-    .attr('height', height)
-    .attr('width', width)
+    .attr('height', `${height}px`)
+    .attr('width', `${width}px`)
     .append('g')
     .attr('transform', `translate(${margin.left}, ${margin.top})`);
-  console.log(yScale.domain());
-  svg
+
+  const rectContainer = svg.append('g').attr('class', 'rect-container');
+  rectContainer
     .selectAll('rect')
-    .data(aggData)
+    .data(data)
     .join('rect')
-    .attr('x', d => xScale(d.country))
-    .attr('y', d => {
-      console.log(d, yScale(d.sum));
-      return yScale(d.sum);
-    })
-    .attr('height', d => {
-      return plotHeight - yScale(d.sum);
-    })
+    .attr('x', d => xScale(d.x))
+    .attr('y', d => plotHeight - yScale(d.y))
+    .attr('height', d => yScale(d.y))
     .attr('width', xScale.bandwidth())
     .attr('fill', 'steelblue')
     .attr('stroke', 'white');
 
-  // axes
-  const xAxis = axisBottom(xScale);
   svg
     .append('g')
-    .call(xAxis)
+    .attr('class', 'x-axis')
+    .call(axisBottom(xScale))
     .attr('transform', `translate(0, ${plotHeight})`);
-  const yAxis = axisLeft(yScale.range([plotHeight, 0]));
-  svg.append('g').call(yAxis);
+
+  svg
+    .append('g')
+    .attr('class', 'y-axis')
+    .call(axisLeft(yScale.range([plotHeight, 0])))
+    .attr('transform', `translate(0)`);
 }

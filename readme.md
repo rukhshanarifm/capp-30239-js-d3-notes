@@ -55,15 +55,18 @@ Demo: making a bar chart
 ### 4. Line charts
 Demo: making the gun deaths in florida chart
 
-### 5. Nested selections
+### 5. Layouts
+Demo: pie chart
+
+### 6. Nested selections
 Demo: anscomb’s quartet
 
-### 6. Interaction
+### 7. Interaction
 Demo: Tooltipped scatterplot
 
-### 7. Animation 
+### 8. Animation 
 Demo: Circular bar clock
 Demo: Tooltip dropdown 
 
-### 8. Putting it all together 
+### 9. Putting it all together 
 Demo: constructing a stupid slide show app
