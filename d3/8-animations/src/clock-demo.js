@@ -1,57 +1,75 @@
+import {arc} from 'd3-shape';
 import {select} from 'd3-selection';
 import {scaleLinear} from 'd3-scale';
-import {arc} from 'd3-shape';
 import {schemeTableau10} from 'd3-scale-chromatic';
 import {transition} from 'd3-transition';
 
+function getUpdatedData(radiusScale) {
+  const now = new Date();
+  return [
+    {
+      id: 'second',
+      value: now.getSeconds(),
+      divisor: 60,
+      innerRadius: 0.2,
+      outerRadius: 0.35,
+    },
+    {
+      id: 'minutes',
+      value: now.getMinutes(),
+      divisor: 60,
+      innerRadius: 0.4,
+      outerRadius: 0.55,
+    },
+    {
+      id: 'hours',
+      value: now.getHours(),
+      divisor: 24,
+      innerRadius: 0.6,
+      outerRadius: 0.75,
+    },
+  ].map(x => {
+    return {
+      ...x,
+      endAngle: Math.PI * 2 * (x.value / x.divisor),
+      innerRadius: radiusScale(x.innerRadius),
+      outerRadius: radiusScale(x.outerRadius),
+      startAngle: 0,
+    };
+  });
+}
+
 const height = 500;
 const width = 500;
-
 function myVis() {
-  const svg = select('body')
+  const svg = select('#app')
     .append('svg')
     .attr('height', height)
     .attr('width', width)
     .append('g')
     .attr('transform', `translate(${width / 2}, ${height / 2})`);
-  const arcFunc = arc().startAngle(0);
+
+  const arcScale = arc().startAngle(0);
   const radiusScale = scaleLinear()
     .domain([0, 1])
     .range([0, height / 2]);
-  const t = transition().duration(500);
-
-  function drawArcs() {
-    const time = new Date();
-    const seconds = (time.getSeconds() / 60) * Math.PI * 2;
-    const minutes = (time.getMinutes() / 60) * Math.PI * 2;
-    const hours = ((time.getHours() % 12) / 12) * Math.PI * 2;
-    //   innerRadius, outerRadius, startAngle, endAngle
-
-    const data = [
-      {id: 'seconds', innerRadius: 0.2, outerRadius: 0.35, endAngle: seconds},
-      {id: 'minutes', innerRadius: 0.4, outerRadius: 0.55, endAngle: minutes},
-      {id: 'hours', innerRadius: 0.6, outerRadius: 0.75, endAngle: hours},
-    ].map(d => {
-      return {
-        ...d,
-        innerRadius: radiusScale(d.innerRadius),
-        outerRadius: radiusScale(d.outerRadius),
-      };
-    });
+  function renderArcs() {
+    const t = transition().duration(300);
+    const data = getUpdatedData(radiusScale);
     svg
       .selectAll('.arc')
       .data(data)
       .join(
-        enter => enter.append('path').attr('d', d => arcFunc(d)),
+        enter => enter.append('path').attr('d', d => arcScale(d)),
         update =>
-          update.call(el => el.transition(t).attr('d', d => arcFunc(d))),
-        //   update.attr('d', d => arcFunc(d)),
+          update.call(el => el.transition(t).attr('d', d => arcScale(d))),
+        exit => exit.remove(),
       )
-      .attr('fill', (_, idx) => schemeTableau10[idx])
-      .attr('class', 'arc');
-    setTimeout(drawArcs, 1000);
+      .attr('class', 'arc')
+      .attr('fill', (_, idx) => schemeTableau10[idx]);
+    setTimeout(renderArcs, 1000);
   }
-  drawArcs();
+  renderArcs();
 }
 
 myVis();

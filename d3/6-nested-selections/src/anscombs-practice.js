@@ -1,28 +1,30 @@
-import {scaleLinear, select, extent, axisBottom, axisLeft} from 'd3';
+import './main.css';
+import {scaleLinear} from 'd3-scale';
+import {axisBottom, axisLeft} from 'd3-axis';
+import {select} from 'd3-selection';
+import {extent} from 'd3-array';
+// import './anscombs-practice';
 
 fetch('./data/anscombe.json')
-  .then(d => d.json())
-  .then(d => {
-    smallMultiples(d);
-  });
+  .then(x => x.json())
+  .then(myVis);
 
 const height = 300;
 const width = 300;
 const margin = {top: 10, left: 50, right: 10, bottom: 50};
 const plotWidth = width - margin.left - margin.right;
 const plotHeight = height - margin.top - margin.bottom;
-function smallMultiples(data) {
-  const groups = data.reduce((acc, row) => {
-    acc[row.Series] = (acc[row.Series] || []).concat(row);
-    return acc;
-  }, {});
-
+function myVis(data) {
+  console.log(data);
+  const xDomain = extent(data, d => d.X);
+  const yDomain = extent(data, d => d.Y);
   const xScale = scaleLinear()
-    .domain(extent(data, d => d.X))
+    .domain(xDomain)
     .range([0, plotWidth]);
   const yScale = scaleLinear()
-    .domain(extent(data, d => d.Y))
+    .domain(yDomain)
     .range([plotHeight, 0]);
+
   const svg = select('#app')
     .append('svg')
     .attr('height', height * 2)
@@ -30,26 +32,39 @@ function smallMultiples(data) {
     .append('g')
     .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
+  //   svg
+  //     .selectAll('circle')
+  //     .data(data)
+  //     .join('circle')
+  //     .attr('cx', d => xScale(d.X))
+  //     .attr('cy', d => yScale(d.Y))
+  //     .attr('fill', 'steelblue')
+  //     .attr('r', 5);
+  const groups = data.reduce((acc, row) => {
+    acc[row.Series] = (acc[row.Series] || []).concat(row);
+    return acc;
+  }, {});
+  console.log(groups);
   const containers = svg
     .selectAll('g.container')
     .data(Object.values(groups))
     .join('g')
     .attr('class', 'container')
-    .attr('transform', (_, idx) => {
-      const xShift = (idx % 2) * width;
-      const yShift = Math.floor(idx / 2) * height;
-      return `translate(${xShift}, ${yShift})`;
+    .attr('transform', (d, i) => {
+      console.log(d, i);
+      return `translate(${(i % 2) * width}, ${Math.floor(i / 2) * height})`;
     });
-
   containers
-    .append('text')
-    .attr('transform', `translate(${plotWidth / 2}, ${plotHeight / 2})`)
-    .text(d => d[0].Series)
+    .selectAll('.backgroundLetter')
+    .data(d => [d[0]])
+    .join('text')
+    .attr('class', 'backgroundLetter')
+    .attr('x', plotWidth / 2)
+    .attr('y', plotHeight / 2)
     .attr('font-size', 100)
     .attr('text-anchor', 'middle')
-    .attr('alignment-baseline', 'central')
-    .attr('fill-opacity', 0.3);
-
+    .text(d => d.Series)
+    .attr('opacity', 0.5);
   containers
     .selectAll('circle')
     .data(d => d)
@@ -59,16 +74,12 @@ function smallMultiples(data) {
     .attr('fill', 'steelblue')
     .attr('r', 5);
   containers
-    .selectAll('g.x-axis')
-    .data(d => d)
-    .join('g')
+    .append('g')
     .attr('class', 'x-axis')
-    .call(axisBottom(xScale))
-    .attr('transform', `translate(0, ${plotHeight})`);
+    .attr('transform', `translate(0, ${plotHeight})`)
+    .call(axisBottom(xScale));
   containers
-    .selectAll('g.y-axis')
-    .data(d => d)
-    .join('g')
+    .append('g')
     .attr('class', 'y-axis')
     .call(axisLeft(yScale));
 }

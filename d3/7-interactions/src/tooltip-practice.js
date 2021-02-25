@@ -1,7 +1,11 @@
-import {extent} from 'd3-array';
+import './main.css';
 import {scaleLinear} from 'd3-scale';
 import {select} from 'd3-selection';
 import {axisBottom, axisLeft} from 'd3-axis';
+import {extent} from 'd3-array';
+import {transition} from 'd3-transition';
+import {interpolateTurbo} from 'd3-scale-chromatic';
+// import './tooltip-practice';
 
 fetch('./data/cars.json')
   .then(d => d.json())
@@ -12,91 +16,120 @@ const width = 400;
 const margin = {top: 10, left: 50, right: 10, bottom: 50};
 const plotWidth = width - margin.left - margin.right;
 const plotHeight = height - margin.top - margin.bottom;
-const columns = [
-  'Miles_per_Gallon',
-  'Cylinders',
-  'Displacement',
-  'Horsepower',
-  'Weight_in_lbs',
-  'Acceleration',
-];
-function myVis(data) {
-  let xCol = columns[0];
-  let yCol = columns[1];
-  select('body')
-    .append('select')
-    .on('change', function() {
-      xCol = this.value;
-      renderPlot();
-    })
-    .selectAll('option')
-    .data(columns)
-    .join('option')
-    .text(d => d);
-  select('body')
-    .append('select')
-    .on('change', function() {
-      yCol = this.value;
-      renderPlot();
-    })
-    .selectAll('option')
-    .data(columns)
-    .join('option')
-    .text(d => d);
 
-  const svg = select('body')
+function myVis(data) {
+  console.log(data);
+  const columns = Object.keys(data[0]);
+  let xCol = columns[1];
+  let yCol = columns[2];
+
+  const dropdowns = select('#app')
+    .append('div')
+    .style('display', 'flex')
+    .style('flex-direction', 'column')
+    .selectAll('.drop-down')
+    .data(['xCol', 'yCol'])
+    .join('div');
+
+  dropdowns.append('div').text(d => d);
+  dropdowns
+    .append('select')
+    .on('change', (event, x) => {
+      if (x === 'xCol') {
+        xCol = event.target.value;
+      } else {
+        yCol = event.target.value;
+      }
+      renderPlot();
+    })
+
+    .selectAll('option')
+    .data(dim => columns.map(key => ({key, dim})))
+    .join('option')
+    .text(d => d.key)
+    .property('selected', d => d.key === (d.dim === 'xCol' ? xCol : yCol));
+
+  const svgContainer = select('#app')
+    .append('div')
+    .style('position', 'relative');
+  const svg = svgContainer
     .append('svg')
     .attr('height', height)
     .attr('width', width)
     .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
-  const circleContainer = svg.append('g');
-  select('body')
-    .append('div')
-    .attr('class', 'tooltip')
-    .style('position', 'absolute')
-    .style('pointer-events', 'none');
-  const axisContainerX = svg
+    .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+  const xAxis = svg
     .append('g')
-    .attr('transform', `translate(${0},${plotHeight})`);
-  const axisContainerY = svg.append('g');
+    .attr('class', 'x-axis')
+    .attr('transform', `translate(0, ${plotHeight})`);
+  const yAxis = svg.append('g').attr('class', 'y-axis');
+  svg
+    .append('g')
+    .attr('class', 'x-label')
+    .attr('transform', `translate(${width / 2}, ${height - 20})`)
+    .append('text')
+    .text(xCol)
+    .attr('text-anchor', 'middle');
+
+  svg
+    .append('g')
+    .attr('class', 'y-label')
+    .attr('transform', `translate(${-margin.left / 2}, ${plotHeight / 2})`)
+    .append('text')
+    .text(yCol)
+    .attr('transform', `rotate(-90)`)
+    .attr('text-anchor', 'middle');
+
+  const tooltip = svgContainer
+    .append('div')
+    .attr('id', 'tooltip')
+    .text('hi im a tooltip');
+
   renderPlot();
 
   function renderPlot() {
-    // scales
+    const t = transition().duration();
     const xScale = scaleLinear()
       .domain(extent(data, d => d[xCol]))
       .range([0, plotWidth]);
     const yScale = scaleLinear()
       .domain(extent(data, d => d[yCol]))
       .range([plotHeight, 0]);
-
-    // the circles
-    circleContainer
+    svg
       .selectAll('circle')
       .data(data)
-      .join('circle')
-      .attr('cx', d => xScale(d[xCol]))
-      .attr('cy', d => yScale(d[yCol]))
+      .join(
+        enter =>
+          enter
+            .append('circle')
+            .attr('cx', d => xScale(d[xCol]))
+            .attr('cy', d => yScale(d[yCol])),
+
+        update =>
+          update.call(el =>
+            el
+              .transition(t)
+              .attr('cx', d => xScale(d[xCol]))
+              .attr('cy', d => yScale(d[yCol])),
+          ),
+      )
+      .attr('fill', (_, idx) => interpolateTurbo(idx / 406))
       .attr('r', 5)
-      .attr('fill', 'steelblue')
-      .on('mouseenter', function mouseMove(d) {
-        const {x, y} = this.getBoundingClientRect();
-        select(this).attr('fill', 'red');
-        select('.tooltip')
-          .style('top', `${y}px`)
-          .style('left', `${x}px`)
-          .text(d.Name);
+      .on('mouseenter', function(d, x) {
+        tooltip
+          .style('display', 'block')
+          .style('left', `${d.offsetX}px`)
+          .style('top', `${d.offsetY}px`)
+          .text(x.Name);
       })
-      .on('mouseleave', function mouseMove(d) {
-        select(this).attr('fill', 'steelblue');
-        select('.tooltip')
-          .style('top', 0)
-          .style('left', 0)
-          .text('');
+      .on('mouseleave', function(d, x) {
+        tooltip.style('display', 'none').text('');
       });
-    // axes
-    axisContainerX.call(axisBottom(xScale));
-    axisContainerY.call(axisLeft(yScale));
+    xAxis.call(axisBottom(xScale));
+    yAxis.call(axisLeft(yScale));
+
+    select('.x-label text').text(xCol);
+    select('.y-label text').text(yCol);
   }
 }
