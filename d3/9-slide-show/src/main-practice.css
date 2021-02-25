@@ -1,0 +1,49 @@
+body {
+  font-family: "Source Sans Pro", "Trebuchet MS", "Lucida Grande", "Bitstream Vera Sans", "Helvetica Neue", sans-serif;
+  margin: 0;
+  color: #333;
+}
+
+h1, h2, h3, h4, h5 {
+  padding: 0;
+  margin: 0;
+}
+
+#app {
+  display: flex;
+  margin-top: 50px;
+  padding: 0;
+}
+
+#annotation-container {
+  border-right: thin solid black;
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  padding: 20px;
+  width: 300px;
+  min-width: 300px;
+}
+
+#header {
+  background-color: black;
+  height: 40px;
+  width: 100%;
+}
+
+#top-matter {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+#progress {
+  display: flex;
+}
+
+.progress-dot {
+  height: 30px;
+  width: 30px;
+  border-radius: 100%;
+  cursor: pointer;
+}

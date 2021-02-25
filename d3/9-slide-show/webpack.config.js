@@ -12,6 +12,11 @@ module.exports = {
       },
       {
         test: /\.js$/,
+        enforce: 'pre',
+        use: ['source-map-loader'],
+      },
+      {
+        test: /\.js$/,
         loader: 'babel-loader',
         exclude: [/node_modules/],
         options: {
@@ -23,6 +28,7 @@ module.exports = {
   output: {
     filename: 'bundle.js',
     path: path.join(__dirname, './'),
+    sourceMapFilename: '[name].js.map',
   },
   plugins: [],
   mode: process.env.NODE_ENV === 'production' ? 'production' : 'development', // eslint-disable-line
