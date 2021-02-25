@@ -6,7 +6,27 @@
     <link rel="stylesheet" href="src/main.css" />
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app" class="flex-down">
+      <div id="header"></div>
+      <div id="title-matter" class="flex-down">
+        <h1> My very special project</h1>
+        <h3> It contains very good content</h3>
+      </div>
+      <div id="main-content" class="flex">
+        <div id="slide-detail" class="flex-down">
+          <h1></h1>
+          <p></p>
+          <div class="flex-down">
+            <div id="progress"></div>
+            <div class="flex">
+              <button id="prev">prev</button>
+              <button id="next">next</button>
+            </div>
+          </div>
+        </div>
+        <div id="slide-content"></div>        
+      </div>
+    </div>
     <script src="bundle.js"></script>
   </body>
 </html>
